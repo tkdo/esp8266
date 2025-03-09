@@ -1,30 +1,92 @@
+#include <ArduinoJson.h>
 #include <ESP8266WiFi.h>        // 本程序使用 ESP8266WiFi库
 #include <ESP8266WiFiMulti.h>   //  ESP8266WiFiMulti库
 #include <ESP8266WebServer.h>   //  ESP8266WebServer库
-#define LED_PIN 2  // 对应GPIO2（D4）
-
+#include <map>
  
 ESP8266WiFiMulti wifiMulti;     // 建立ESP8266WiFiMulti对象,对象名称是'wifiMulti'
  
 ESP8266WebServer server(80);// 建立ESP8266WebServer对象，对象名称为server
                                     // 括号中的数字是网路服务器响应http请求的端口号
                                     // 网络服务器标准http端口号为80，因此这里使用80为端口号
- 
-                                                                           
-void switch_on() {
-  if (server.method() == HTTP_GET) {
-        digitalWrite(LED_PIN, HIGH);  
-        server.send(200, "text/plain", "open");
+
+String answer = "";  // 改为全局变量存储解析结果
+
+void parseInfo(WiFiClient &client) {
+    // 步骤1：流式解析替代完整读取
+    JsonDocument doc;
+    DeserializationError error = deserializeJson(doc, client);  // 直接解析网络流‌:ml-citation{ref="2" data="citationList"}
+    
+    // 步骤2：错误处理优化
+    if (error) {
+        Serial.println("JSON解析失败");
+        return;
+    }
+
+    // 步骤3：字段提取改进
+    if (!doc["data"].isNull()) {
+       answer = doc["data"].as<String>();
+        Serial.printf("解析结果: %s\n", answer.c_str());
+    } else {
+        Serial.println("JSON中无data字段");
     }
 }
+                                    
 
-void switch_off() {
-    if (server.method() == HTTP_GET) {
-          digitalWrite(LED_PIN, LOW);
-          server.send(200, "text/plain", "close");
-      }
+// 向服务器请求信息并对信息进行解析
+void httpRequest(String query){
+  WiFiClient client;
+  String host = "192.168.3.7";
+  String url ="/?query=" + query;
+  String httpRequest = String("GET ") + url + " HTTP/1.1\r\n" + 
+                              "Host: " + host + "\r\n" + 
+                              "Connection: close\r\n\r\n";
+   
+  Serial.print("Connecting to "); Serial.print(host);
+  if (client.connect(host, 8000)){
+    Serial.println(" Success!");
+    // 向服务器发送http请求信息
+    client.print(httpRequest);
+    Serial.println("Sending request: ");
+    Serial.println(httpRequest);  
+    // 获取并显示服务器响应状态行 
+    String status_response = client.readStringUntil('\n');
+    Serial.print("status_response: ");
+    Serial.println(status_response);
+    // 使用find跳过HTTP响应头
+    if (client.find("\r\n\r\n")) {
+      Serial.println("Found Header End. Start Parsing.");
+    }
+    parseInfo(client); 
+  }
+  else {
+    Serial.println(" connection failed!");
+  }   
+  //断开客户端与服务器连接工作
+  client.stop(); 
 }
 
+
+
+void chat(){ 
+  if (server.method() == HTTP_GET) {
+    std::map<String, String> paramMap;
+    if (server.args()) {
+        for (uint8_t i = 0; i < server.args(); i++) {
+          String argument = server.argName(i);
+          String value = server.arg(i);
+          paramMap[argument] = value;  
+        }
+        bool hasQuery = (paramMap.find("query") != paramMap.end());
+        String queryValue = "";
+      if(hasQuery) {
+          queryValue = paramMap["query"];
+          httpRequest(queryValue);
+      }
+        server.send(200, "text/plain", answer);
+    }
+}
+}
 
 // 设置处理404情况的函数'handleNotFound'
 void handleNotFound(){                                 // 当浏览器请求的网络资源无法在服务器找到时，
@@ -32,7 +94,6 @@ void handleNotFound(){                                 // 当浏览器请求的�
 }
 
 void setup(void){
-  pinMode(LED_PIN, OUTPUT);
   Serial.begin(9600);          // 启动串口通讯
  
   //通过addAp函数存储  WiFi名称       WiFi密码
@@ -60,8 +121,7 @@ void setup(void){
   
 //--------"启动网络服务功能"程序部分开始-------- //  此部分为程序为本示例程序重点1
   server.begin();                 
-  server.on("/switch_on", switch_on);
-  server.on("/switch_off", switch_off);  
+  server.on("/chat", chat);
   server.onNotFound(handleNotFound);        
 //--------"启动网络服务功能"程序部分结束--------
   Serial.println("HTTP server started");//  告知用户ESP8266网络服务功能已经启动
