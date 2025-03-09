@@ -12,7 +12,6 @@ ESP8266WebServer server(80);// 建立ESP8266WebServer对象，对象名称为ser
  
                                                                            
 void switch_on() {
- // 检查HTTP请求的方法
   if (server.method() == HTTP_GET) {
         digitalWrite(LED_PIN, HIGH);  
         server.send(200, "text/plain", "open");
@@ -20,16 +19,15 @@ void switch_on() {
 }
 
 void switch_off() {
-    // 检查HTTP请求的方法
-     if (server.method() == HTTP_GET) {
-           digitalWrite(LED_PIN, LOW);
-           server.send(200, "text/plain", "close");
-       }
-   }
+    if (server.method() == HTTP_GET) {
+          digitalWrite(LED_PIN, LOW);
+          server.send(200, "text/plain", "close");
+      }
+}
 
 
 // 设置处理404情况的函数'handleNotFound'
-void handleNotFound(){                                        // 当浏览器请求的网络资源无法在服务器找到时，
+void handleNotFound(){                                 // 当浏览器请求的网络资源无法在服务器找到时，
   server.send(404, "text/plain", "404: Not found");   // NodeMCU将调用此函数。
 }
 
@@ -69,10 +67,7 @@ void setup(void){
   Serial.println("HTTP server started");//  告知用户ESP8266网络服务功能已经启动
 }
  
-/* 以下函数语句为本示例程序重点3
-详细讲解请参见太极创客网站《零基础入门学用物联网》
-第3章-第2节 3_2_1_First_Web_Server 的说明讲解*/  
 void loop(void){
   server.handleClient();     // 处理http服务器访问
 }
- 
+

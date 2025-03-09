@@ -40,3 +40,20 @@ void handleRoot() {   //处理网站根目录“/”的访问请求
   }
 }
 ```
+
+
+```C++
+void switch_on() {
+  if (server.method() == HTTP_GET) {
+        digitalWrite(LED_PIN, HIGH);  
+        server.send(200, "text/plain", "open");
+    }
+}
+
+void switch_off() {
+    if (server.method() == HTTP_GET) {
+          digitalWrite(LED_PIN, LOW);
+          server.send(200, "text/plain", "close");
+      }
+}
+```
