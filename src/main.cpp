@@ -42,35 +42,6 @@ void parseInfo(WiFiClient &client) {
 
 // 向服务器请求信息并对信息进行解析
 void httpRequest(String query){
-  // WiFiClient client;
-  // String host = "192.168.3.7";
-  // String url ="/?query=" + query;
-  // String httpRequest = String("GET ") + url + " HTTP/1.1\r\n" + 
-  //                             "Host: " + host + "\r\n" + 
-  //                             "Connection: close\r\n\r\n";
-   
-  // Serial.print("Connecting to "); Serial.print(host);
-  // if (client.connect(host, 8000)){
-  //   Serial.println(" Success!");
-  //   // 向服务器发送http请求信息
-  //   client.print(httpRequest);
-  //   Serial.println("Sending request: ");
-  //   Serial.println(httpRequest);  
-  //   // 获取并显示服务器响应状态行 
-  //   String status_response = client.readStringUntil('\n');
-  //   Serial.print("status_response: ");
-  //   Serial.println(status_response);
-  //   // 使用find跳过HTTP响应头
-  //   if (client.find("\r\n\r\n")) {
-  //     Serial.println("Found Header End. Start Parsing.");
-  //   }
-  //   parseInfo(client); 
-  // }
-  // else {
-  //   Serial.println(" connection failed!");
-  // }   
-  // //断开客户端与服务器连接工作
-  // client.stop(); 
   if (WiFiMulti.run() == WL_CONNECTED) {
     WiFiClient client;
     HTTPClient http;
@@ -83,7 +54,7 @@ void httpRequest(String query){
     // 构建JSON请求体
     const size_t capacity = JSON_OBJECT_SIZE(1);
     StaticJsonDocument<capacity> doc;
-    doc["query"] = "ok";
+    doc["query"] =  query;
     String requestBody;
     serializeJson(doc, requestBody);
 
