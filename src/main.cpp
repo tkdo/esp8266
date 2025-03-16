@@ -45,7 +45,7 @@ void httpRequest(String query){
   if (WiFiMulti.run() == WL_CONNECTED) {
     WiFiClient client;
     HTTPClient http;
-    http.setTimeout(5000000);
+    http.setTimeout(30000);
     http.setReuse(false);   // 禁用连接复用
     // 设置请求地址
     http.begin(client, "http://192.168.3.7:8000/");
@@ -101,7 +101,13 @@ void chat(){
           queryValue = paramMap["query"];
           httpRequest(queryValue);
       }
-        server.send(200, "text/plain", answer);
+
+        DynamicJsonDocument jsonDoc(512);  // 根据实际数据量调整大小
+        jsonDoc["code"] = 1;              // 自定义状态码
+        jsonDoc["data"] = answer;         // 将答案包装到JSON字段中
+        String jsonResponse;
+        serializeJson(jsonDoc, jsonResponse);
+        server.send(200, "application/json; charset=utf-8", jsonResponse);
     }
 }
 }
