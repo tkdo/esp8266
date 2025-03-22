@@ -7,7 +7,9 @@
 #include <ESP8266HTTPClient.h>
 #include <map>
 #include <string>
+#include <U8g2lib.h>
 
+U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, /*clock=*/ SCL, /*data=*/ SDA, /*reset=*/ U8X8_PIN_NONE);
 String httpRequest(String query);
 ESP8266WiFiMulti wifiMulti; // 建立ESP8266WiFiMulti对象,对象名称是'wifiMulti'
 ESP8266WebServer server(80);// 建立ESP8266WebServer对象，对象名称为server
@@ -50,6 +52,12 @@ void chat(){
         String resJson = httpRequest(query);
         res.fromJson(resJson);
     }
+    // 更新OLED屏幕内容
+    u8g2.clearBuffer();
+    u8g2.setFont(u8g2_font_ncenB08_tr);
+    u8g2.drawStr(0, 5, res.getData().c_str());  // 显示响应的前16个字符，避免超出屏幕范围
+    u8g2.sendBuffer();
+    // 返回响应
     server.send(200, CONTENT_TYPE, res.toJson());
 }
 
@@ -79,10 +87,20 @@ void initServer(){
   Serial.println("HTTP server started");
 }
 
+
+
+
 void setup(void){
+  u8g2.begin();
+
   Serial.begin(9600);          // 启动串口通讯
   initWIFI();                  // 初始化WiFi
   initServer();                // 初始化HTTP服务器
+
+  u8g2.clearBuffer();
+  u8g2.setFont(u8g2_font_ncenB08_tr);
+  u8g2.drawStr(0,20,"Starting...");
+  u8g2.sendBuffer();
 }
  
 void loop(void){
