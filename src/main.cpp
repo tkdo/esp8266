@@ -65,7 +65,6 @@ void initWIFI(){
     delay(1000);                             // 环境中搜索addAP函数所存储的WiFi。如果搜到多个存储的WiFi那么NodeMCU
     Serial.print(i++); Serial.print(' ');    // 将会连接信号最强的那一个WiFi信号。
   }
-  Serial.print("#############################");        
   Serial.println('\n');                     // WiFi连接成功后
   Serial.print("Connected to ");            // NodeMCU将通过串口监视器输出。
   Serial.println(WiFi.SSID());              // 连接的WiFI名称
