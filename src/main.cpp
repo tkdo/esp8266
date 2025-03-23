@@ -9,9 +9,11 @@
 #include <string>
 #include <pins_arduino.h>
 #include <U8g2lib.h> 
+#include "Screen.h"
+
 
 U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, SCL, SDA, U8X8_PIN_NONE);
-
+Screen screen(u8g2);
 
 String httpRequest(String query);
 ESP8266WiFiMulti wifiMulti; // 建立ESP8266WiFiMulti对象,对象名称是'wifiMulti'
@@ -56,10 +58,7 @@ void chat(){
         res.fromJson(resJson);
     }
     // 更新OLED屏幕内容
-    u8g2.clearBuffer();
-    u8g2.setFont(u8g2_font_unifont_t_chinese1);
-    u8g2.drawUTF8(0,40, res.getData().c_str());  // 显示响应的前16个字符，避免超出屏幕范围
-    u8g2.sendBuffer();
+    screen.setContent(res.getData().c_str());
     // 返回响应
     server.send(200, CONTENT_TYPE, res.toJson());
 }
@@ -91,8 +90,6 @@ void initServer(){
 }
 
 
-
-
 void setup(void){
   u8g2.begin();
 
@@ -100,13 +97,14 @@ void setup(void){
   initWIFI();                  // 初始化WiFi
   initServer();                // 初始化HTTP服务器
 
-  u8g2.clearBuffer();
-  u8g2.setFont(u8g2_font_unifont_t_chinese1); 
-  u8g2.drawUTF8(0,20,"你好...");
-  u8g2.sendBuffer();
+  screen.initialize();
+  screen.setContent("你好...");
 }
  
 void loop(void){
   server.handleClient();     // 处理http服务器访问
+  screen.render();
+  delay(3000);
+  screen.nextPage();
 }
 
